@@ -1,7 +1,9 @@
 package org.m2acsi.entity;
 
+import java.util.Set;
 import java.util.UUID;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -9,8 +11,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
@@ -18,11 +22,8 @@ import javax.persistence.Table;
  * @author 
  *
  */
-@Entity(name="Demande")
+@Entity
 @Table(name = "Demande")
-@NamedQueries({ 
-    @NamedQuery(name = "Demande.findByStatus", query = "SELECT idDemande, nom, prenom, adresse, etat FROM demande WHERE demande.etat = :etat")
-})
 public class Demande {
 	
 	/**
@@ -107,8 +108,14 @@ public class Demande {
 	 * Etat demande (avec la classe enum)
 	 */
 	//@Column(name="etat")
-	@Enumerated(EnumType.STRING)
-	private EtatDemande etat;
+	//@Enumerated(EnumType.STRING)
+	private String etat;
+	
+	/**
+	 * liste des actions reliées à la demande
+	 */
+	@OneToMany(mappedBy="demande", cascade = CascadeType.ALL)
+	private Set<Action> listeAction;
 
 	
 	
@@ -122,7 +129,7 @@ public class Demande {
 	 * @param adresse du citoyen
 	 * @param etat de la demande
 	 */
-	public Demande(String nom, String prenom, String adresse, EtatDemande etat) {
+	public Demande(String nom, String prenom, String adresse, String etat) {
 		super();
 		this.idDemande = UUID.randomUUID().toString();
 		this.nom = nom;
@@ -135,6 +142,7 @@ public class Demande {
 	/**
 	 * Constructeur vide
 	 */
+	//JPA
 	public Demande() {
 		super();
 		this.idDemande = UUID.randomUUID().toString();
@@ -183,14 +191,23 @@ public class Demande {
 	}
 
 
-	public EtatDemande getEtat() {
+	public String getEtat() {
 		return etat;
 	}
 
 
-	public void setEtat(EtatDemande etat) {
+	public void setEtat(String etat) {
 		this.etat = etat;
 	}
+
+	public Set<Action> getListeAction() {
+		return listeAction;
+	}
+
+	public void setListeAction(Set<Action> listeAction) {
+		this.listeAction = listeAction;
+	}
+
 
 	/*---------------------ToString-----------------------*/
 	@Override
