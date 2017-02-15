@@ -1,5 +1,6 @@
-package org.m2acsi.entity;
+package org.m2acsi.entity.demande;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -115,7 +116,7 @@ public class Demande {
 	 * liste des actions reliées à la demande
 	 */
 	@OneToMany(mappedBy="demande", cascade = CascadeType.ALL)
-	private Set<Action> listeAction;
+	private List<Action> listeAction;
 
 	
 	
@@ -200,11 +201,11 @@ public class Demande {
 		this.etat = etat;
 	}
 
-	public Set<Action> getListeAction() {
+	public List<Action> getListeAction() {
 		return listeAction;
 	}
 
-	public void setListeAction(Set<Action> listeAction) {
+	public void setListeAction(List<Action> listeAction) {
 		this.listeAction = listeAction;
 	}
 

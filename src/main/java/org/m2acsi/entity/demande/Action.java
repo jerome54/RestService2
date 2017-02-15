@@ -1,4 +1,4 @@
-package org.m2acsi.entity;
+package org.m2acsi.entity.demande;
 
 import java.util.UUID;
 

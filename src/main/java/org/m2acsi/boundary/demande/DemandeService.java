@@ -1,10 +1,11 @@
-package org.m2acsi.boundary;
+package org.m2acsi.boundary.demande;
 
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,11 +29,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-
-import org.m2acsi.boundary.DemandeRessource;
-import org.m2acsi.entity.Action;
-import org.m2acsi.entity.Demande;
+import org.m2acsi.boundary.demande.DemandeRessource;
+import org.m2acsi.entity.demande.Action;
+import org.m2acsi.entity.demande.Demande;
 
 @RestController
 @RequestMapping(value="/demandes",produces=MediaType.APPLICATION_JSON_VALUE)
@@ -51,6 +50,8 @@ public class DemandeService {
     @GetMapping(value = "/liste")
     public ResponseEntity<?> getAllFormations(){
         Iterable<Demande> allDemande = demDao.findAll();
+        Iterator<Demande> d = allDemande.iterator();
+        Demande ne = d.next();
         return new ResponseEntity<>(demandeToRessource(allDemande),HttpStatus.OK);
     }
     
@@ -194,7 +195,7 @@ public class DemandeService {
     private Resource<Demande> demandeToRessource(Demande demande, Boolean isCollection){
         Link selfLink = linkTo(DemandeService.class).slash(demande.getIdDemande()).withSelfRel();
         if(isCollection){
-            Link collectionLink = linkTo(methodOn(DemandeService.class).getAllFormations()).withRel("collection ");
+            Link collectionLink = linkTo(methodOn(DemandeService.class).getAllFormations()).slash("liste").withRel("collection ");
             return new Resource<>(demande, selfLink, collectionLink);
         }else{
             return new Resource<>(demande, selfLink);
@@ -203,7 +204,7 @@ public class DemandeService {
     
     
     private Resources<Resource<Demande>> demandeToRessource(Iterable<Demande> demande){
-        Link selfLink = linkTo(methodOn(DemandeService.class).getAllFormations()).withSelfRel();
+        Link selfLink = linkTo(methodOn(DemandeService.class).getAllFormations()).slash("liste").withSelfRel();
         List<Resource<Demande>> listFormations = new ArrayList();
         demande.forEach(formation -> listFormations.add(demandeToRessource(formation, false)));
         return new Resources<>(listFormations, selfLink);
@@ -213,7 +214,7 @@ public class DemandeService {
     private Resource<Action> actionToRessource(Action action, Boolean isCollection, String idDemande){
         Link selfLink = linkTo(DemandeService.class).slash(idDemande).slash(action.getIdAction()).withSelfRel();
         if(isCollection){
-            Link collectionLink = linkTo(methodOn(DemandeService.class).getActionsByDemande(idDemande)).withRel("collection ");
+            Link collectionLink = linkTo(methodOn(DemandeService.class).getActionsByDemande(idDemande)).slash("liste").slash(idDemande).withRel("collection ");
             return new Resource<>(action, selfLink, collectionLink);
         }else{
             return new Resource<>(action, selfLink);
