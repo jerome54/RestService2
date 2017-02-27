@@ -14,13 +14,11 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource
 public interface ActionRessource extends JpaRepository<Action, String>{
-
-	//@Query("SELECT id_action, etat_action, nom_action, date_action, id_demande from action where id_demande = :id")
-	//public List<Action> findByIdDemande(String id);
 	
-	@Query("SELECT new Action(idAction, nomAction, etatAction, dateAction) from org.m2acsi.entity.demande.Action a where a.demande.idDemande = :id")
+	@Query("SELECT a from org.m2acsi.entity.demande.Action a where a.demande.idDemande = :id")
 	public List<Action> recupActionParDemande(@Param("id")String id);
 	
-	@Query("SELECT new Action(idAction, nomAction, etatAction, dateAction) from org.m2acsi.entity.demande.Action a where a.demande.idDemande = :id and a.idAction = :idAction")
+	@Query("SELECT new Action(idAction, nomAction, dateAction) from org.m2acsi.entity.demande.Action a where a.demande.idDemande = :id and a.idAction = :idAction")
 	public List<Action> recupActionParDemandeParId(@Param("id")String id, @Param("idAction") String idAction);
+
 }

@@ -1,5 +1,12 @@
 package org.m2acsi.entity.intervention;
 
+import javax.persistence.Entity;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
+@Entity
+@JsonTypeName("IntervenantInterne")
 public class IntervenantInterne extends Intervenant {
 
 	

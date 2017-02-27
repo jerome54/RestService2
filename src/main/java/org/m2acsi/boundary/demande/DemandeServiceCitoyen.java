@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,9 +35,9 @@ import org.m2acsi.entity.demande.Action;
 import org.m2acsi.entity.demande.Demande;
 
 @RestController
-@RequestMapping(value="/demandes",produces=MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value="/citoyen/demandes",produces=MediaType.APPLICATION_JSON_VALUE)
 @ExposesResourceFor(Demande.class)
-public class DemandeService {
+public class DemandeServiceCitoyen {
 	
 	@Autowired
     DemandeRessource demDao;
@@ -47,13 +48,13 @@ public class DemandeService {
 	 * Get de la liste totale des demandes
 	 * @return la liste complète des demandes
 	 */
-    @GetMapping(value = "/liste")
+    /*@GetMapping(value = "/liste")
     public ResponseEntity<?> getAllFormations(){
         Iterable<Demande> allDemande = demDao.findAll();
         Iterator<Demande> d = allDemande.iterator();
         Demande ne = d.next();
         return new ResponseEntity<>(demandeToRessource(allDemande),HttpStatus.OK);
-    }
+    }*/
     
     /**
      * get d'une demande à partir de son id
@@ -61,21 +62,16 @@ public class DemandeService {
      * @return la demande
      */
     @GetMapping(value="/{demandeId}")
-    public ResponseEntity<?> getOneDemande(@PathVariable("demandeId") String id){
+    public ResponseEntity<?> getOneDemande(@PathVariable("demandeId") String id, @RequestHeader("token") String token){
+    	Demande demande = demDao.findOne(id);
+    	if(!demande.getToken().equals(token))
+    	{
+    		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    	}
     	return Optional.ofNullable(demDao.findOne(id)).map(d -> new ResponseEntity<>(demandeToRessource(d,true),HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     
-    /**
-     * get de la liste des demandes par statuts
-     * @param etat
-     * @return la liste des demandes selon un statut
-     */
-    @GetMapping(value="/")
-    public ResponseEntity<?> getDemandeByStatus(@PathParam("etat") String etat){
-    	List<Demande> demandeStatus = demDao.findByEtat(etat);
-    	return new ResponseEntity<>(demandeToRessource(demandeStatus), HttpStatus.OK);
-    }
     
     /**
      * get des la liste des actions d'une demandes
@@ -83,9 +79,14 @@ public class DemandeService {
      * @return la liste des actions d'une demande
      */
     @GetMapping(value="/{demandeId}/actions")
-    public ResponseEntity<?> getActionsByDemande(@PathVariable("demandeId") String id){
+    public ResponseEntity<?> getActionsByDemande(@PathVariable("demandeId") String id, @RequestHeader("token") String token){
+    	Demande demande = demDao.findOne(id);
+    	if(!demande.getToken().equals(token))
+    	{
+    		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    	}
     	Iterable<Action> demandeAction = actDao.recupActionParDemande(id);
-    	return new ResponseEntity<>(actionToRessource(demandeAction, id), HttpStatus.OK);
+    	return new ResponseEntity<>(actionToRessource(demandeAction, id, token), HttpStatus.OK);
     }
     
     /**
@@ -95,26 +96,16 @@ public class DemandeService {
      * @return l'action selon l'id pour une demande
      */
     @GetMapping(value="/{demandeId}/{idAction}")
-    public ResponseEntity<?> getActionByDemandeById(@PathVariable("demandeId") String id, @PathVariable("idAction") String idAction){
+    public ResponseEntity<?> getActionByDemandeById(@PathVariable("demandeId") String id, @PathVariable("idAction") String idAction, @RequestHeader("token") String token){
+    	Demande demande = demDao.findOne(id);
+    	if(!demande.getToken().equals(token))
+    	{
+    		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    	}
     	Iterable<Action> demandeAction = actDao.recupActionParDemandeParId(id, idAction);
-    	return new ResponseEntity<>(actionToRessource(demandeAction, id), HttpStatus.OK);
+    	return new ResponseEntity<>(actionToRessource(demandeAction, id, token), HttpStatus.OK);
     }
     
-    /**
-     * Post d'une action pour une demande
-     * @param action
-     * @param id
-     * @return création d'une action pour demande
-     */
-    @PostMapping(value="/{demandeId}")
-    public ResponseEntity<?> saveAction(@RequestBody Action action, @PathVariable("demandeId") String id)
-    {
-    	 action.setDemande(demDao.findOne(id));
-    	 Action sauvegarde = actDao.save(action);
-         HttpHeaders responseHeaders = new HttpHeaders();
-         responseHeaders.setLocation(linkTo(DemandeService.class).slash(sauvegarde.getIdAction()).toUri());
-         return new ResponseEntity<>(null, responseHeaders, HttpStatus.CREATED);
-    }
     
     /**
      * Post d'une demande
@@ -125,8 +116,8 @@ public class DemandeService {
     public ResponseEntity<?> saveDemande(@RequestBody Demande demande){
         Demande sauvegarde = demDao.save(demande);
         HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.setLocation(linkTo(DemandeService.class).slash(sauvegarde.getIdDemande()).toUri());
-        return new ResponseEntity<>(null, responseHeaders, HttpStatus.CREATED);
+        responseHeaders.setLocation(linkTo(DemandeServiceCitoyen.class).slash(sauvegarde.getIdDemande()).toUri());
+        return new ResponseEntity<>(sauvegarde, responseHeaders, HttpStatus.CREATED);
     }
     
     /**
@@ -136,7 +127,7 @@ public class DemandeService {
      * @return le update d'une demande en état début
      */
     @RequestMapping(method=RequestMethod.PUT, value="/{demandeId}")
-    public ResponseEntity<?> updateFormation(@PathVariable("demandeId") String demandeId, @RequestBody Demande demande){
+    public ResponseEntity<?> updateDemande(@PathVariable("demandeId") String demandeId, @RequestBody Demande demande){
             Optional<Demande> body = Optional.ofNullable(demande);
             if(!body.isPresent()){
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -145,6 +136,10 @@ public class DemandeService {
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
             Demande initiale = demDao.findByIdDemande(demandeId);
+            if(demande.getEtat() != null)
+            {
+            	return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            }
             if(!initiale.getEtat().equals("DEBUT"))
             {
             	return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -168,23 +163,7 @@ public class DemandeService {
             return new ResponseEntity<>(HttpStatus.OK);
 }
     
-    /**
-     * delete/cloture d'une demande
-     * @param demandeId
-     * @param demande
-     * @return cloture d'une demande
-     */
-    @RequestMapping(method=RequestMethod.DELETE, value="/{demandeId}")
-    public ResponseEntity<?> cloturerFormation(@PathVariable("demandeId") String demandeId){
-        if(!demDao.exists(demandeId)){
-             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-         
-        Demande initiale = demDao.findByIdDemande(demandeId);
-        initiale.setEtat("FERME");
-        Demande d = demDao.save(initiale);
-    	return new ResponseEntity<>(HttpStatus.OK);
-    }
+
     /***********************************************************************************************************************************
      * 
      *  														HATEOS
@@ -193,38 +172,38 @@ public class DemandeService {
     
     //HATEOS pour les demandes
     private Resource<Demande> demandeToRessource(Demande demande, Boolean isCollection){
-        Link selfLink = linkTo(DemandeService.class).slash(demande.getIdDemande()).withSelfRel();
-        if(isCollection){
-            Link collectionLink = linkTo(methodOn(DemandeService.class).getAllFormations()).slash("liste").withRel("collection ");
+        Link selfLink = linkTo(DemandeServiceCitoyen.class).slash(demande.getIdDemande()).withSelfRel();
+        /*if(isCollection){
+            Link collectionLink = linkTo(methodOn(DemandeServiceCitoyen.class).getAllFormations()).slash("liste").withRel("collection ");
             return new Resource<>(demande, selfLink, collectionLink);
-        }else{
+        }else{*/
             return new Resource<>(demande, selfLink);
-        }
+        //}
     }
     
     
     private Resources<Resource<Demande>> demandeToRessource(Iterable<Demande> demande){
-        Link selfLink = linkTo(methodOn(DemandeService.class).getAllFormations()).slash("liste").withSelfRel();
+        Link selfLink = linkTo(methodOn(DemandeServiceCitoyen.class)).slash("liste").withSelfRel();
         List<Resource<Demande>> listFormations = new ArrayList();
         demande.forEach(formation -> listFormations.add(demandeToRessource(formation, false)));
         return new Resources<>(listFormations, selfLink);
     }
 
     //HATEOS pour les actions
-    private Resource<Action> actionToRessource(Action action, Boolean isCollection, String idDemande){
-        Link selfLink = linkTo(DemandeService.class).slash(idDemande).slash(action.getIdAction()).withSelfRel();
+    private Resource<Action> actionToRessource(Action action, Boolean isCollection, String idDemande, String token){
+        Link selfLink = linkTo(DemandeServiceCitoyen.class).slash(idDemande).slash(action.getIdAction()).withSelfRel();
         if(isCollection){
-            Link collectionLink = linkTo(methodOn(DemandeService.class).getActionsByDemande(idDemande)).slash("liste").slash(idDemande).withRel("collection ");
+            Link collectionLink = linkTo(methodOn(DemandeServiceCitoyen.class).getActionsByDemande(idDemande, token)).slash("liste").slash(idDemande).withRel("collection ");
             return new Resource<>(action, selfLink, collectionLink);
         }else{
             return new Resource<>(action, selfLink);
         }
     }
     
-    private Resources<Resource<Action>> actionToRessource(Iterable<Action> action, String idDemande){
-        Link selfLink = linkTo(methodOn(DemandeService.class).getActionsByDemande(idDemande)).withSelfRel();
+    private Resources<Resource<Action>> actionToRessource(Iterable<Action> action, String idDemande, String token){
+        Link selfLink = linkTo(methodOn(DemandeServiceCitoyen.class).getActionsByDemande(idDemande, token)).withSelfRel();
         List<Resource<Action>> listFormations = new ArrayList();
-        action.forEach(formation -> listFormations.add(actionToRessource((Action)formation, false, idDemande)));
+        action.forEach(formation -> listFormations.add(actionToRessource((Action)formation, false, idDemande, token)));
         return new Resources<>(listFormations, selfLink);
     }
 }

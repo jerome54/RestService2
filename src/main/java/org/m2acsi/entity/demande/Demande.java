@@ -12,11 +12,14 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.m2acsi.entity.intervention.Intervenant;
 
 /**
  * Classe concernant une demande
@@ -88,6 +91,15 @@ public class Demande {
 	private String idDemande;
 	
 	/**
+	 * Libelle demande
+	 */
+	private String libelleDemande;
+	
+	@ManyToOne
+	@JoinColumn(name="id_type_incident")
+	private TypeIncident type;
+	
+	/**
 	 * Nom citoyen
 	 */
 	//@Column(name="nom")
@@ -105,19 +117,22 @@ public class Demande {
 	//@Column(name="adresse")
 	private String adresse;
 	
+	
 	/**
 	 * Etat demande (avec la classe enum)
 	 */
-	//@Column(name="etat")
-	//@Enumerated(EnumType.STRING)
-	private String etat;
+	@ManyToOne
+	@JoinColumn(name="id_etat")
+	private Etat etat;
 	
 	/**
 	 * liste des actions reliées à la demande
 	 */
 	@OneToMany(mappedBy="demande", cascade = CascadeType.ALL)
 	private List<Action> listeAction;
-
+	
+	private String token;
+	
 	
 	
 	/*------------------CONSTRUCTEUR-------------------*/
@@ -130,13 +145,14 @@ public class Demande {
 	 * @param adresse du citoyen
 	 * @param etat de la demande
 	 */
-	public Demande(String nom, String prenom, String adresse, String etat) {
+	public Demande(String nom, String prenom, String adresse, String libelleDemande) {
 		super();
 		this.idDemande = UUID.randomUUID().toString();
 		this.nom = nom;
+		this.libelleDemande = libelleDemande;
 		this.prenom = prenom;
 		this.adresse = adresse;
-		this.etat = etat;
+		this.token = UUID.randomUUID().toString().replaceAll("-", "");
 	}
 
 
@@ -147,6 +163,7 @@ public class Demande {
 	public Demande() {
 		super();
 		this.idDemande = UUID.randomUUID().toString();
+		this.token = UUID.randomUUID().toString().replaceAll("-", "");
 	}
 
 	
@@ -192,12 +209,12 @@ public class Demande {
 	}
 
 
-	public String getEtat() {
+	public Etat getEtat() {
 		return etat;
 	}
 
 
-	public void setEtat(String etat) {
+	public void setEtat(Etat etat) {
 		this.etat = etat;
 	}
 
@@ -207,6 +224,16 @@ public class Demande {
 
 	public void setListeAction(List<Action> listeAction) {
 		this.listeAction = listeAction;
+	}
+
+
+	public String getToken() {
+		return token;
+	}
+
+
+	public void setToken(String token) {
+		this.token = token;
 	}
 
 
