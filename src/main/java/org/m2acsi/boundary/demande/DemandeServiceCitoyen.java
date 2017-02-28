@@ -64,7 +64,7 @@ public class DemandeServiceCitoyen {
     @GetMapping(value="/{demandeId}")
     public ResponseEntity<?> getOneDemande(@PathVariable("demandeId") String id, @RequestHeader("token") String token){
     	Demande demande = demDao.findOne(id);
-    	if(!demande.getToken().equals(token))
+    	if(!demande.getToken().equals(token) || demande.getToken().equals(null))
     	{
     		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     	}
