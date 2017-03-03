@@ -247,11 +247,12 @@ public class DemandeServiceUser {
     //HATEOS pour les demandes
     private Resource<Demande> demandeToRessource(Demande demande, Boolean isCollection){
         Link selfLink = linkTo(DemandeServiceUser.class).slash(demande.getIdDemande()).withSelfRel();
+        Link actionlink = linkTo(DemandeServiceUser.class).slash(demande.getIdDemande()).slash("actions").withRel("actions");
         if(isCollection){
             Link collectionLink = linkTo(methodOn(DemandeServiceUser.class).getAllFormations()).slash("liste").withRel("collection ");
             return new Resource<>(demande, selfLink, collectionLink);
         }else{
-            return new Resource<>(demande, selfLink);
+            return new Resource<>(demande, selfLink, actionlink);
         }
     }
     
